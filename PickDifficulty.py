@@ -16,7 +16,6 @@ class PickDifficulty(GameSetup):
     
         self.objects = [
             Button(
-            image=None,
             pos=(self.screen.get_width() // 2, 200), # Position of the button
             text_input="EASY", # Text displayed on the button
             font=pygame.font.Font("images/menu/font.ttf", 75), # Font of the text
@@ -25,7 +24,6 @@ class PickDifficulty(GameSetup):
             ),
 
             Button(
-            image=None,
             pos=(self.screen.get_width() // 2, 400),
             text_input="MEDIUM",
             font=pygame.font.Font("images/menu/font.ttf", 75),
@@ -33,7 +31,6 @@ class PickDifficulty(GameSetup):
             hovering_colour="Yellow"),
 
             Button(
-            image=None,
             pos=(self.screen.get_width() // 2, 600),
             text_input="HARD",
             font=pygame.font.Font("images/menu/font.ttf", 75),

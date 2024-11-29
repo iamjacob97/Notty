@@ -18,7 +18,6 @@ class PickPlayer(GameSetup):
     
         self.objects = [
             Button(
-            image=None,
             pos=(self.screen.get_width() // 2, 300), # Position of the button
             text_input="2 PLAYER", # Text displayed on the button
             font=pygame.font.Font("images/menu/font.ttf", 75), # Font of the text
@@ -27,7 +26,6 @@ class PickPlayer(GameSetup):
             ),
 
             Button(
-            image=None,
             pos=(self.screen.get_width() // 2, 500),
             text_input="3 PLAYER",
             font=pygame.font.Font("images/menu/font.ttf", 75),

@@ -1,4 +1,5 @@
 import pygame
+from os.path import join
 from random import choice, shuffle
 
 class Card: 
@@ -23,7 +24,7 @@ class Card:
     
     def update(self, screen, pos, player):
         if not self.image:
-            image = pygame.transform.scale(pygame.image.load(f"images\\cards\\{self.colour} {self.number}.png").convert_alpha(), (90, 125))
+            image = pygame.image.load(join("images", "notty_cards", f"{self.colour} {self.number}.png")).convert()
             self.image["player1"] = image
             self.image["player2"] = image
             self.image["player3"] = pygame.transform.rotate(image, -90)
@@ -33,7 +34,7 @@ class Card:
         self.rect = self.image[player].get_rect(center = (self.x, self.y))
         # updating screen
         if self.highlighted == True:
-            pygame.draw.rect(screen, "white", self.rect.inflate(1, 1))
+            pygame.draw.rect(screen, "darkblue", self.rect.inflate(9, 9))
         screen.blit(self.image[player], self.rect)
 
     def IfCardClicked(self, position):
@@ -111,7 +112,7 @@ class CollectionOfCards:
                         return list(valid_group)
                     checked_nums.add(num) #To avoid rechecking same numbers
 
-        return None
+        return []
     
     def find_largest_valid_group(self): # maximum number [(same number, different colours = 4), (same colour, consecutive numbers = 10)] which means we need to record all possible valid groups      
         valid_groups = []
@@ -147,7 +148,7 @@ class CollectionOfCards:
                     max_valid.add(card)
             return list(max_valid)
         
-        return None
+        return []
     
 
 class Deck:
@@ -158,8 +159,7 @@ class Deck:
         for colour in colours:
             for number in numbers:
                 self.cards += [Card(colour, number), Card(colour, number)] # Create Deck
-        self.image = pygame.Surface((90, 125))
-        self.image.fill("blue")
+        self.image = pygame.image.load(join("images", "notty_cards", "deck.png")).convert()
         self.rect = self.image.get_rect(center = pos)
 
     #shuffle function
@@ -187,6 +187,7 @@ class Player:
         self.picked_cards = 0
         self.discard_list = []
         self.region = None
+        self.active = False
         self.selected = False
     
     def __eq__(self, other):
@@ -203,9 +204,9 @@ class Player:
         self.drawn_cards += 1      
 
     def pick_card(self, other):
-        pick_card = choice(other.hand.collection)
-        other.hand.collection.remove(pick_card)
-        self.hand.collection.append(pick_card)
+        picked_card = choice(other.hand.collection)
+        other.hand.collection.remove(picked_card)
+        self.hand.collection.append(picked_card)
         self.picked_cards += 1
 
 
@@ -220,13 +221,17 @@ class Player:
             return True
         else:
             return False
+    
+    def play_for_me(self, deck, player_list):
+        pass
 
     def end_turn(self):
         self.drawn_cards = 0
         self.picked_cards = 0
         for card in self.discard_list:
             card.highlighted = False
-        self.discard_list = []    
+        self.discard_list = [] 
+        self.active = False   
 
     def is_winner(self):
         return len(self.hand.collection) == 0
@@ -254,7 +259,34 @@ class Player:
                     card.update(screen, (x_pos, y_pos), self.name)
                     y_pos += card.image[self.name].get_height()
 
-        
+class HumanPlayer(Player):
+    pass
+
+class ComputerPlayer(Player):
+    def __init__(self):
+        super().__init__()
+
+    def make_move(self, difficulty, deck, non_current_players):
+        if difficulty == "easy":
+            move_list = ["draw", "pick", "discard", "end"]
+            while self.active:
+                random_choice = choice(move_list)
+                if random_choice == "draw":
+                    if self.drawn_cards <3:
+                        self.draw_card(deck)
+                    else:
+                        move_list.remove("draw")
+                elif random_choice == "pick":
+                    if self.picked_cards < 1:
+                        self.pick_card(choice(non_current_players))
+                        move_list.remove("pick")
+                elif random_choice == "discard":
+                    for card in self.hand.find_largest_valid_group():
+                        self.hand.collection.remove(card)
+                        deck.append(card)
+                    deck.shuffleDeck()
+                elif random_choice == "end":
+                    self.end_turn()       
 
 
 def probability_of_valid_group(card_collection_list):

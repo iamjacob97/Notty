@@ -20,7 +20,6 @@ class Menu(GameSetup):
         # Creating buttons using the Button class and storing them in a list
         self.objects = [
             Button(
-            image=None,
             pos=(self.screen.get_width() // 2, 200), # Position of the button
             text_input="PLAY", # Text displayed on the button
             font=pygame.font.Font("images/menu/font.ttf", 75), # Font of the text
@@ -29,7 +28,6 @@ class Menu(GameSetup):
             ),
 
             Button(
-            image=None,
             pos=(self.screen.get_width() // 2, 350),
             text_input="OPTIONS",
             font=pygame.font.Font("images/menu/font.ttf", 75),
@@ -37,7 +35,6 @@ class Menu(GameSetup):
             hovering_colour="Yellow"),
 
             Button(
-            image=None,
             pos=(self.screen.get_width() // 2, 500),
             text_input="INSTUCTIONS",
             font=pygame.font.Font("images/menu/font.ttf", 75),
@@ -45,7 +42,6 @@ class Menu(GameSetup):
             hovering_colour="Yellow"),
 
             Button(
-            image=None,
             pos=(self.screen.get_width() // 2, 650),
             text_input="QUIT",
             font=pygame.font.Font("images/menu/font.ttf", 75),
@@ -60,12 +56,9 @@ class Menu(GameSetup):
             self.screen.fill("black")
             font = pygame.font.Font("images/menu/font.ttf", 25)
             options_text = font.render("This is the OPTIONS screen.", True, "White")
-            self.screen.blit(options_text,
-(self.screen.get_width() // 2 - options_text.get_width() // 2, 300),
-            )
+            self.screen.blit(options_text,(self.screen.get_width() // 2 - options_text.get_width() // 2, 300),)
 
             back_button = Button(
-                image=None,
                 pos=(self.screen.get_width() // 2, 500),
                 text_input="BACK",
                 font=pygame.font.Font("images/menu/font.ttf", 75),
@@ -111,7 +104,6 @@ class Menu(GameSetup):
 
             # Creating a back button
             back_button = Button(
-                image=None,
                 pos=(self.screen.get_width() // 2, self.screen.get_height() - 100),
                 text_input="BACK",
                 font=pygame.font.Font("images/menu/font.ttf", 50),
