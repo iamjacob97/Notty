@@ -22,8 +22,8 @@ class PickPlayer(GameSetup):
             pos=(self.screen.get_width() // 2, 300), # Position of the button
             text_input="2 PLAYER", # Text displayed on the button
             font=pygame.font.Font("images/menu/font.ttf", 75), # Font of the text
-            base_color="White", # Base color of the button
-            hovering_color="Yellow", # Color of the button when hovered over
+            base_colour="White", # Base colour of the button
+            hovering_colour="Yellow", # colour of the button when hovered over
             ),
 
             Button(
@@ -31,8 +31,8 @@ class PickPlayer(GameSetup):
             pos=(self.screen.get_width() // 2, 500),
             text_input="3 PLAYER",
             font=pygame.font.Font("images/menu/font.ttf", 75),
-            base_color="White",
-            hovering_color="Yellow")]
+            base_colour="White",
+            hovering_colour="Yellow")]
 
     def pick_player_events(self):
         for event in pygame.event.get():
@@ -42,15 +42,13 @@ class PickPlayer(GameSetup):
 
             #checks if mouse is pressed and gets the position of the mouse
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-
-                # If the PLAY button is clicked
-                if self.objects[0].IfButtonClicked(mouse_pos): 
+               # If the PLAY button is clicked
+                if self.objects[0].IfButtonClicked(event.pos): 
                     self.manager.shared_data["numberofplayers"] = 2
                     self.manager.change_state(PickDifficulty(self.screen, self.clock, self.manager))
                     self.running = False
                     
-                elif self.objects[1].IfButtonClicked(mouse_pos):
+                elif self.objects[1].IfButtonClicked(event.pos):
                     self.manager.shared_data["numberofplayers"] = 3
                     self.manager.change_state(PickDifficulty(self.screen, self.clock, self.manager))
                     self.running = False

@@ -24,8 +24,8 @@ class Menu(GameSetup):
             pos=(self.screen.get_width() // 2, 200), # Position of the button
             text_input="PLAY", # Text displayed on the button
             font=pygame.font.Font("images/menu/font.ttf", 75), # Font of the text
-            base_color="White", # Base color of the button
-            hovering_color="Yellow", # Color of the button when hovered over
+            base_colour="White", # Base colour of the button
+            hovering_colour="Yellow", # colour of the button when hovered over
             ),
 
             Button(
@@ -33,24 +33,24 @@ class Menu(GameSetup):
             pos=(self.screen.get_width() // 2, 350),
             text_input="OPTIONS",
             font=pygame.font.Font("images/menu/font.ttf", 75),
-            base_color="White",
-            hovering_color="Yellow"),
+            base_colour="White",
+            hovering_colour="Yellow"),
 
             Button(
             image=None,
             pos=(self.screen.get_width() // 2, 500),
             text_input="INSTUCTIONS",
             font=pygame.font.Font("images/menu/font.ttf", 75),
-            base_color="White",
-            hovering_color="Yellow"),
+            base_colour="White",
+            hovering_colour="Yellow"),
 
             Button(
             image=None,
             pos=(self.screen.get_width() // 2, 650),
             text_input="QUIT",
             font=pygame.font.Font("images/menu/font.ttf", 75),
-            base_color="White",
-            hovering_color="Yellow")
+            base_colour="White",
+            hovering_colour="Yellow")
         ]
 
     def show_options(self):
@@ -69,10 +69,10 @@ class Menu(GameSetup):
                 pos=(self.screen.get_width() // 2, 500),
                 text_input="BACK",
                 font=pygame.font.Font("images/menu/font.ttf", 75),
-                base_color="White",
-                hovering_color="Yellow",
+                base_colour="White",
+                hovering_colour="Yellow",
             )
-            back_button.changeColor(pygame.mouse.get_pos())
+            back_button.changeColour(pygame.mouse.get_pos())
             back_button.update(self.screen)
 
             for event in pygame.event.get():
@@ -100,7 +100,7 @@ class Menu(GameSetup):
 
             # Loop through each line in the instructions list with an index
             for i, line in enumerate(instructions):
-                # Render the text using the specified font removing any leading/trailing whitespace and setting the color to white
+                # Render the text using the specified font removing any leading/trailing whitespace and setting the colour to white
                 instructions_text = font.render(line.strip(), True, "White")
 
                 # Display the text using the blit method
@@ -115,12 +115,12 @@ class Menu(GameSetup):
                 pos=(self.screen.get_width() // 2, self.screen.get_height() - 100),
                 text_input="BACK",
                 font=pygame.font.Font("images/menu/font.ttf", 50),
-                base_color="White",
-                hovering_color="Yellow",
+                base_colour="White",
+                hovering_colour="Yellow",
             )
 
             # Update button visuals
-            back_button.changeColor(pygame.mouse.get_pos())
+            back_button.changeColour(pygame.mouse.get_pos())
             back_button.update(self.screen)
 
             # menu events
@@ -144,25 +144,23 @@ class Menu(GameSetup):
 
             #checks if mouse is pressed and gets the position of the mouse
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-
                 # If the PLAY button is clicked
-                if self.objects[0].IfButtonClicked(mouse_pos): # PLAY Button which is at index 0
+                if self.objects[0].IfButtonClicked(event.pos): # PLAY Button which is at index 0
                     self.stop_background_music() # Stop the background music
                     self.manager.change_state(PickPlayer(self.screen, self.clock, self.manager))
                     self.running = False # Exit the menu loop
 
                 # If the OPTIONS button is clicked
-                elif self.objects[1].IfButtonClicked(mouse_pos): # OPTIONS Button
+                elif self.objects[1].IfButtonClicked(event.pos): # OPTIONS Button
                     #play audio
                     self.show_options()
 
                 # If the INSTRUCTIONS button is clicked
-                elif self.objects[2].IfButtonClicked(mouse_pos): # INSTRUCTIONS Button
+                elif self.objects[2].IfButtonClicked(event.pos): # INSTRUCTIONS Button
                     self.show_instructions()
 
                 # If the QUIT button is clicked
-                elif self.objects[3].IfButtonClicked(mouse_pos):  # QUIT Button
+                elif self.objects[3].IfButtonClicked(event.pos):  # QUIT Button
                     pygame.quit()
                     sys.exit()
 

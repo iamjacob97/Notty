@@ -8,9 +8,10 @@ class Card:
         self.number = number
         self.x = None
         self.y = None
-        self.image = None
+        self.image = {}
         self.rect = None
         self.mask = None
+        self.highlighted = False
 
     def __eq__(self, other):
         if not isinstance(other, Card):
@@ -18,20 +19,29 @@ class Card:
         return self.colour == other.colour and self.number == other.number
 
     def __hash__(self):
-        return hash((self.colour, self.number))  
+        return hash((self.colour, self.number))    
     
-    def rotate_card(self,screen):
-        self.image = pygame.transform.scale(pygame.image.load(f"images\\cards\\{self.colour} {self.number}.png").convert_alpha(), (90, 125))
-        self.rect = self.image.get_rect(center = (self.x, self.y))        
-        rotated_image = pygame.transform.rotate(self.image, -90)
-        screen.blit(rotated_image, self.rect)
-    
-    def draw(self, screen):
-        if self.image is None:
-            self.image = pygame.transform.scale(pygame.image.load(f"images\\cards\\{self.colour} {self.number}.png").convert_alpha(), (90, 125))
-        self.rect = self.image.get_rect(center = (self.x, self.y))
-        screen.blit(self.image, self.rect)
+    def update(self, screen, pos, player):
+        if not self.image:
+            image = pygame.transform.scale(pygame.image.load(f"images\\cards\\{self.colour} {self.number}.png").convert_alpha(), (90, 125))
+            self.image["player1"] = image
+            self.image["player2"] = image
+            self.image["player3"] = pygame.transform.rotate(image, -90)
+        # Assigning center positions
+        self.x = pos[0]
+        self.y = pos[1]
+        self.rect = self.image[player].get_rect(center = (self.x, self.y))
+        # updating screen
+        if self.highlighted == True:
+            pygame.draw.rect(screen, "white", self.rect.inflate(1, 1))
+        screen.blit(self.image[player], self.rect)
 
+    def IfCardClicked(self, position):
+        # Check if the mouse position is within the button's rectangle area
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
+            return True
+        return False
+    
 
 
 class CollectionOfCards:
@@ -140,127 +150,111 @@ class CollectionOfCards:
         return None
     
 
-    
 class Deck:
-  def __init__(self, ):
-    self.cards = []
-    colours = ["blue", "red", "yellow", "green"]
-    numbers = [num for num in range(1, 11)]
-    for colour in colours:
-        for number in numbers:
-            self.cards += [Card(colour, number)] * 2 # Create Deck
-    self.image = pygame.Surface((90, 125))
-    self.image.fill("blue")
-    self.rect = self.image.get_rect(center = (self.WINDOW_WIDTH // 2, self.WINDOW_HEIGHT // 2))
+    def __init__(self, pos):
+        self.cards = []
+        colours = ["blue", "red", "yellow", "green"]
+        numbers = [num for num in range(1, 11)]
+        for colour in colours:
+            for number in numbers:
+                self.cards += [Card(colour, number), Card(colour, number)] # Create Deck
+        self.image = pygame.Surface((90, 125))
+        self.image.fill("blue")
+        self.rect = self.image.get_rect(center = pos)
 
-  #shuffle function
-  def shuffleDeck(self):
-    shuffle(self.cards)
+    #shuffle function
+    def shuffleDeck(self):
+        shuffle(self.cards)
 
-  def deal_cards(self, player_list):
-      self.shuffleDeck()
-      for i in range(len(player_list)):    
-          collection = []
-          for _ in range(5):
-              collection.append(self.cards.pop())
-          player_list[i].hand = CollectionOfCards(collection)  
+    def deal_cards(self, player_list):
+        self.shuffleDeck()
+        for i in range(len(player_list)):    
+            collection = []
+            for _ in range(5):
+                collection.append(self.cards.pop())
+            player_list[i].hand = CollectionOfCards(collection)  
 
-  def draw(self, screen):
-     screen.blit(self.image, self.rect)
+    def update(self, screen):
+        screen.blit(self.image, self.rect)
     
 
 
 class Player:
-  def __init__(self):
-    self.hand = None
-    self.drawn_cards = 0
-    self.pick = 0
-    self.playing = False
-    self.index = None
-    self.region = None
+    def __init__(self):
+        self.name = None
+        self.hand = None
+        self.drawn_cards = 0
+        self.picked_cards = 0
+        self.discard_list = []
+        self.region = None
+        self.selected = False
+    
+    def __eq__(self, other):
+        if not isinstance(other, Player):
+            return False
+        return self.name == other.name
 
-  def draw_card(self, deck):
-    draw_card = deck.cards.pop()
-    self.hand.collection.append(draw_card)
-    self.drawn_cards += 1      
+    def __hash__(self):
+        return hash(self.name)
 
-  def pick_card(self, other):
-    pick_card = choice(other.hand.collection)
-    other.hand.collection.remove(pick_card)
-    self.hand.collection.append(pick_card)
-    self.pick += 1
+    def draw_card(self, deck):
+        draw_card = deck.cards.pop()
+        self.hand.collection.append(draw_card)
+        self.drawn_cards += 1      
 
-  def end_turn(self):
-    self.draw = 0
-    self.pick = 0
-    self.playing = False
+    def pick_card(self, other):
+        pick_card = choice(other.hand.collection)
+        other.hand.collection.remove(pick_card)
+        self.hand.collection.append(pick_card)
+        self.picked_cards += 1
 
-  def is_winner(self):
-    return len(self.hand.collection) == 0
-  
-  def discard_group(self):
-        lst = []
-        card_is_enough = False
-        while not card_is_enough:
-            card_found = False
-            print("Which card would you like to select to discard?")
-            print("Input 'none' if you don't need anymore:")
-            selected_card = input("Card: ")
 
-            if selected_card == "none":
-                if self.discard <= 2:
-                    print("You need to have selected at least 3 cards to discard")
-                    print("\n")
-                else:
-                    card_is_enough = True
-            else:
+    def discard_group(self, deck):
+        if CollectionOfCards(self.discard_list).is_valid_group():
+            for card in self.discard_list:
+                card.highlighted = False
+                self.hand.collection.remove(card)
+                deck.cards.append(card)
+            self.discard_list.clear()
+            deck.shuffleDeck()
+            return True
+        else:
+            return False
+
+    def end_turn(self):
+        self.drawn_cards = 0
+        self.picked_cards = 0
+        for card in self.discard_list:
+            card.highlighted = False
+        self.discard_list = []    
+
+    def is_winner(self):
+        return len(self.hand.collection) == 0
+
+
+    def update(self, screen):
+        if self.hand is not None:
+            if self.name == "player1":
+                x_pos = self.region.center[0] - (70 * len(self.hand.collection) / 2)
+                y_pos = self.region.center[1]
                 for card in self.hand.collection:
-                    string = card.colour + " " + str(card.number)
-                    if selected_card == string:
-                        card_found = True
-                        lst.append(card)
-                        self.discard += 1
-                if not card_found:
-                    print("That is not a valid card that you have")
-                    print("\n")
+                    card.update(screen, (x_pos, y_pos), self.name)
+                    x_pos += card.image[self.name].get_width()
+            elif self.name == "player2":
+                x_pos = self.region.center[0] - (70 * len(self.hand.collection) / 2)
+                y_pos = self.region.center[1]
+                for card in self.hand.collection:
+                    card.update(screen, (x_pos, y_pos), self.name)
+                    x_pos += card.image[self.name].get_width()
 
-        new_collection = CollectionOfCards(lst)
-        if new_collection.is_valid_group():
-            for c in lst:
-                self.hand.collection.remove(c)
-            print("\n")
-            print("Your cards have been discarded")
-            print("\n")
-        else:
-            print("\n")
-            print("Your cards do not make up a valid group")
-            print("\n")
-  
-  
-  def draw(self, screen):
-    if self.hand is not None:
-      if self.index == 0:
-        x = (self.WINDOW_WIDTH // 2) - (70 * len(self.hand.collection) / 2)
-        y = 600
-      elif self.index == 1:
-        x = (self.WINDOW_WIDTH // 2) - (70 * len(self.hand.collection) / 2)
-        y = 150
-      else:
-        x = 150
-        y = (self.WINDOW_HEIGHT // 2) - (70 * len(self.hand.collection) / 2)    
+            elif self.name == "player3":
+                x_pos = self.region.center[0]
+                y_pos = self.region.center[1] - (90 * len(self.hand.collection) / 2)
+                for card in self.hand.collection:
+                    card.update(screen, (x_pos, y_pos), self.name)
+                    y_pos += card.image[self.name].get_height()
+
         
-      for card in self.hand.collection:
-        if self.index < 2:
-          card.x = x
-          card.y = y
-          card.draw(screen)
-          x += card.image.get_width()
-        else:
-          card.x = x
-          card.y = y
-          card.rotate_card(screen)
-          y += card.image.get_width()
-
 
 
 def probability_of_valid_group(card_collection_list):

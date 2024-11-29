@@ -28,7 +28,7 @@ class GameSetup:
         else:
             self.screen.fill("black")
         for obj in self.objects: # Draw each button
-            obj.changeColor(pygame.mouse.get_pos()) # Change the colour of each button in loop if hovered over
+            obj.changeColour(pygame.mouse.get_pos()) # Change the colour of each button in loop if hovered over
             obj.update(self.screen) # Update the button visuals
         pygame.display.flip() # Update the display showing new frame
 
