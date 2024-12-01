@@ -22,12 +22,15 @@ class MainGame(GameSetup):
         for i, player in enumerate(self.players):
             player.name = f"player{i + 1}"
             if i == 0:
-                player.region = pygame.Rect((self.screen.get_width()//4), (self.screen.get_height()//4) * 3, 
-                                            (self.screen.get_width()//4) * 2, (self.screen.get_height()//4))
+                player.region = pygame.Rect((self.screen.get_width()//16) * 3, (self.screen.get_height()//16) * 12, 
+                                            (self.screen.get_width()//16) * 9, (self.screen.get_height()//16) * 4)
             elif i == 1:
-                player.region = pygame.Rect((self.screen.get_width()//4), 0, (self.screen.get_width()//4) * 2, (self.screen.get_height()//4))
+                player.region = pygame.Rect((self.screen.get_width()//16) * 3, 0, 
+                                            (self.screen.get_width()//16) * 9, (self.screen.get_height()//16) * 4)
             elif i == 2:
-                player.region = pygame.Rect(0, (self.screen.get_height()//4), (self.screen.get_width()//4), (self.screen.get_height()//4) * 2)
+                player.region = pygame.Rect(0, (self.screen.get_height()//16) * 2, 
+                                            (self.screen.get_width()//16) * 3, (self.screen.get_height()//16) * 12)
+                player.max_cards = 5
         self.player_index = 0
         self.current_player = self.players[self.player_index]
         self.current_player.active = True
@@ -51,12 +54,12 @@ class MainGame(GameSetup):
                         Button("discard", ((self.screen.get_width()//8) * 7, (self.screen.get_height()//9) * 4), "DISCARD", self.font, "red", "red"),
                         Button("play", ((self.screen.get_width()//8) * 7, (self.screen.get_height()//9) * 5), "PLAY FOR ME", self.font, "white", "green"),
                         Button("end", ((self.screen.get_width()//8) * 7, (self.screen.get_height()//9) * 6), "END TURN", self.font, "white", "green"),
-                        Button("player1-prev", ((self.screen.get_width()//8) * 1, (self.screen.get_height()//9) * 8), "prev", self.font, "red", "red"),
-                        Button("player1-next", ((self.screen.get_width()//8) * 7, (self.screen.get_height()//9) * 8), "next", self.font, "red", "red"),
-                        Button("player2-prev", ((self.screen.get_width()//8) * 1, 17), "prev", self.font, "red", "red"),
-                        Button("player2-next", ((self.screen.get_width()//8) * 7, 17), "next", self.font, "red", "red"),
-                        Button("player3-prev", (17, (self.screen.get_height()//9) * 2), "prev", self.font, "red", "red", -90),
-                        Button("player3-next", (17, (self.screen.get_height()//9) * 7), "next", self.font, "red", "red", -90)]
+                        Button("player1-prev", ((self.screen.get_width()//16) * 5, self.screen.get_height() - 17), "prev", self.font, "red", "red"),
+                        Button("player1-next", ((self.screen.get_width()//16) * 11, self.screen.get_height() - 17), "next", self.font, "red", "red"),
+                        Button("player2-prev", ((self.screen.get_width()//16) * 5, 17), "prev", self.font, "red", "red"),
+                        Button("player2-next", ((self.screen.get_width()//16) * 11, 17), "next", self.font, "red", "red"),
+                        Button("player3-prev", (17, (self.screen.get_height()//16) * 5), "prev", self.font, "red", "red", -90),
+                        Button("player3-next", (17, (self.screen.get_height()//16) * 11), "next", self.font, "red", "red", -90)]
         
         player_buttons = [Button("player1", (self.screen.get_width()//2, self.screen.get_height() - 17), "player1", self.font, "white", "white"),
                           Button("player2", (self.screen.get_width()//2, 17), "player2", self.font, "white", "white"), 

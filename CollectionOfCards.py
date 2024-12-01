@@ -242,10 +242,8 @@ class Player:
     def update(self, screen):
         if self.hand:
             scroll_buffer = None
-            if self.first_card_index < 0:
-                self.first_card_index = 0
 
-            elif len(self.hand.collection) <= self.max_cards:
+            if len(self.hand.collection) <= self.max_cards:
                 self.first_card_index = 0
                 scroll_buffer = len(self.hand.collection)
 
@@ -263,26 +261,29 @@ class Player:
                 else:
                     scroll_buffer = self.first_card_index + self.max_cards
 
+            gap_between_cards = 5   
+            cards_on_screen = scroll_buffer - self.first_card_index
+            
             if self.name == "player1":
-                x_pos = self.region.center[0] - (70 * len(self.hand.collection) / 2)
+                x_pos = (self.region.center[0] - ((90 + gap_between_cards) * (cards_on_screen / 2))) + 75
                 y_pos = self.region.center[1]
                 for card in self.hand.collection[self.first_card_index : scroll_buffer]:
                     card.update(screen, (x_pos, y_pos), self.name)
-                    x_pos += card.image[self.name].get_width()
+                    x_pos += card.image[self.name].get_width() + gap_between_cards
 
             elif self.name == "player2":
-                x_pos = self.region.center[0] - (70 * len(self.hand.collection) / 2)
+                x_pos = (self.region.center[0] - ((90 + gap_between_cards) * (cards_on_screen / 2))) + 75
                 y_pos = self.region.center[1]
                 for card in self.hand.collection[self.first_card_index : scroll_buffer]:
                     card.update(screen, (x_pos, y_pos), self.name)
-                    x_pos += card.image[self.name].get_width()
+                    x_pos += card.image[self.name].get_width() + gap_between_cards
 
             elif self.name == "player3":
                 x_pos = self.region.center[0]
-                y_pos = self.region.center[1] - (70 * len(self.hand.collection) / 2)
+                y_pos = (self.region.center[1] - ((90 + gap_between_cards) * (cards_on_screen / 2))) + 75
                 for card in self.hand.collection[self.first_card_index : scroll_buffer]:
                     card.update(screen, (x_pos, y_pos), self.name)
-                    y_pos += card.image[self.name].get_height()
+                    y_pos += card.image[self.name].get_height() + gap_between_cards
 
 
 
