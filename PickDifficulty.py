@@ -1,5 +1,6 @@
 import pygame
 import sys
+from os.path import join
 from GameSetup import GameSetup
 from Button import Button
 from MainGame import MainGame
@@ -7,33 +8,31 @@ from MainGame import MainGame
 class PickDifficulty(GameSetup):
     def __init__(self, screen, clock, manager):
         super().__init__(screen, clock, manager)
-        # self.background_image = pygame.image.load("images/menu/background.png")
-
+        self.background_image = pygame.image.load(join("images", "backgrounds", "difficulty.png"))
         # self.background_audio = pygame.mixer.Sound("audio/background.wav")
-
         # Playing the background audio
         # self.play_background_music(volume=0.2)
-    
+        font_style = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 57)
         self.objects = [
-            Button(
+            Button("easy",
             pos=(self.screen.get_width() // 2, 200), # Position of the button
             text_input="EASY", # Text displayed on the button
-            font=pygame.font.Font("images/menu/font.ttf", 75), # Font of the text
+            font=font_style, # Font of the text
             base_colour="White", # Base colour of the button
             hovering_colour="Yellow", # colour of the button when hovered over
             ),
 
-            Button(
+            Button("medium",
             pos=(self.screen.get_width() // 2, 400),
             text_input="MEDIUM",
-            font=pygame.font.Font("images/menu/font.ttf", 75),
+            font=font_style,
             base_colour="White",
             hovering_colour="Yellow"),
 
-            Button(
+            Button("hard",
             pos=(self.screen.get_width() // 2, 600),
             text_input="HARD",
-            font=pygame.font.Font("images/menu/font.ttf", 75),
+            font=font_style,
             base_colour="White",
             hovering_colour="Yellow")]
         

@@ -28,8 +28,9 @@ class Label:
 
 class Button(Label):
     # Constructor to initialize the button object with various attributes
-    def __init__(self, pos, text_input, font, base_colour, hovering_colour, rotate_angle = 0, image = None):
+    def __init__(self,name, pos, text_input, font, base_colour, hovering_colour, rotate_angle = 0, image = None):
         super().__init__(pos, text_input, font, base_colour, rotate_angle)
+        self.name = name
         if image:
             self.image = pygame.transform.rotate(self.font.render(self.text_input, True, self.base_colour), self.rotate_angle)
             self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))

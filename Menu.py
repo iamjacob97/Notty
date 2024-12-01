@@ -1,5 +1,6 @@
 import pygame
 import sys
+from os.path import join
 from GameSetup import GameSetup
 from GameStateManager import GameStateManager
 from Button import Button
@@ -9,74 +10,75 @@ from PickPlayer import PickPlayer
 class Menu(GameSetup):
     def __init__(self, screen, clock, manager):
         super().__init__(screen, clock, manager)
-        self.background_image = pygame.image.load("images/menu/background.png")
+        self.background_image = pygame.image.load(join("images", "backgrounds", "startmenu.png"))
 
         #Loadin audio files for the menu
-        self.background_audio = pygame.mixer.Sound("audio/background.wav")
+        self.background_audio = pygame.mixer.Sound(join("audio", "background.wav"))
 
         # # Playing the background audio
         self.play_background_music(volume=0.2)
-
+        # Loading font
+        font_style = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 57)
         # Creating buttons using the Button class and storing them in a list
         self.objects = [
-            Button(
+            Button("play",
             pos=(self.screen.get_width() // 2, 200), # Position of the button
             text_input="PLAY", # Text displayed on the button
-            font=pygame.font.Font("images/menu/font.ttf", 75), # Font of the text
+            font=font_style, # Font of the text
             base_colour="White", # Base colour of the button
             hovering_colour="Yellow", # colour of the button when hovered over
             ),
 
-            Button(
+            # Button(
+            # pos=(self.screen.get_width() // 2, 350),
+            # text_input="OPTIONS",
+            # font= font_style,
+            # base_colour="White",
+            # hovering_colour="Yellow"),
+
+            Button("instructions",
             pos=(self.screen.get_width() // 2, 350),
-            text_input="OPTIONS",
-            font=pygame.font.Font("images/menu/font.ttf", 75),
-            base_colour="White",
-            hovering_colour="Yellow"),
-
-            Button(
-            pos=(self.screen.get_width() // 2, 500),
             text_input="INSTUCTIONS",
-            font=pygame.font.Font("images/menu/font.ttf", 75),
+            font=font_style,
             base_colour="White",
             hovering_colour="Yellow"),
 
-            Button(
-            pos=(self.screen.get_width() // 2, 650),
+            Button("quit",
+            pos=(self.screen.get_width() // 2, 500),
             text_input="QUIT",
-            font=pygame.font.Font("images/menu/font.ttf", 75),
+            font=font_style,
             base_colour="White",
             hovering_colour="Yellow")
         ]
 
-    def show_options(self):
-        # Display the options screen
-        show_options_screen = True
-        while show_options_screen:
-            self.screen.fill("black")
-            font = pygame.font.Font("images/menu/font.ttf", 25)
-            options_text = font.render("This is the OPTIONS screen.", True, "White")
-            self.screen.blit(options_text,(self.screen.get_width() // 2 - options_text.get_width() // 2, 300),)
+    # def show_options(self):
+    #     # Display the options screen
+    #     show_options_screen = True
+    #     while show_options_screen:
+    #         self.screen.fill("black")
+    #         font = pygame.font.Font(join("images", "menu", "font.ttf"), 25)
+    #         options_text = font.render("This is the OPTIONS screen.", True, "White")
+    #         self.screen.blit(options_text,(self.screen.get_width() // 2 - options_text.get_width() // 2, 300),)
 
-            back_button = Button(
-                pos=(self.screen.get_width() // 2, 500),
-                text_input="BACK",
-                font=pygame.font.Font("images/menu/font.ttf", 75),
-                base_colour="White",
-                hovering_colour="Yellow",
-            )
-            back_button.changeColour(pygame.mouse.get_pos())
-            back_button.update(self.screen)
+    #         back_button = Button(
+    #             pos=(self.screen.get_width() // 2, 500),
+    #             text_input="BACK",
+    #             font=pygame.font.Font(join("images", "menu", "font.ttf"), 75),
+    #             base_colour="White",
+    #             hovering_colour="Yellow",
+    #         )
+    #         back_button.changeColour(pygame.mouse.get_pos())
+    #         back_button.update(self.screen)
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if back_button.IfButtonClicked(pygame.mouse.get_pos()):
-                        show_options_screen = False
+    #         for event in pygame.event.get():
+    #             if event.type == pygame.QUIT:
+    #                 pygame.quit()
+    #                 sys.exit()
+    #             if event.type == pygame.MOUSEBUTTONDOWN:
+    #                 if back_button.IfButtonClicked(pygame.mouse.get_pos()):
+    #                     show_options_screen = False
 
-            pygame.display.flip() # Update the display
+    #         pygame.display.flip() # Update the display
 
 
 
@@ -84,13 +86,11 @@ class Menu(GameSetup):
         # Read instructions from file
         with open("instructions.txt", 'r') as file:
             instructions = file.readlines()
-
-        # Display black screen and load font
+        background = pygame.image.load(join("images", "backgrounds", "instructions.png"))
         show_instructions_screen = True
         while show_instructions_screen:
-            self.screen.fill("black")
-            font = pygame.font.Font("images/menu/font.ttf", 25)
-
+            self.screen.blit(background, (0, 0))          
+            font = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 17)
             # Loop through each line in the instructions list with an index
             for i, line in enumerate(instructions):
                 # Render the text using the specified font removing any leading/trailing whitespace and setting the colour to white
@@ -103,10 +103,10 @@ class Menu(GameSetup):
             
 
             # Creating a back button
-            back_button = Button(
+            back_button = Button("back",
                 pos=(self.screen.get_width() // 2, self.screen.get_height() - 100),
                 text_input="BACK",
-                font=pygame.font.Font("images/menu/font.ttf", 50),
+                font=pygame.font.Font(join("images", "backgrounds", "font.ttf"), 21),
                 base_colour="White",
                 hovering_colour="Yellow",
             )
@@ -143,16 +143,16 @@ class Menu(GameSetup):
                     self.running = False # Exit the menu loop
 
                 # If the OPTIONS button is clicked
-                elif self.objects[1].IfButtonClicked(event.pos): # OPTIONS Button
-                    #play audio
-                    self.show_options()
+                # elif self.objects[1].IfButtonClicked(event.pos): # OPTIONS Button
+                #     #play audio
+                #     self.show_options()
 
                 # If the INSTRUCTIONS button is clicked
-                elif self.objects[2].IfButtonClicked(event.pos): # INSTRUCTIONS Button
+                elif self.objects[1].IfButtonClicked(event.pos): # INSTRUCTIONS Button
                     self.show_instructions()
 
                 # If the QUIT button is clicked
-                elif self.objects[3].IfButtonClicked(event.pos):  # QUIT Button
+                elif self.objects[2].IfButtonClicked(event.pos):  # QUIT Button
                     pygame.quit()
                     sys.exit()
 

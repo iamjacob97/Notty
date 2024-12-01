@@ -34,7 +34,7 @@ class Card:
         self.rect = self.image[player].get_rect(center = (self.x, self.y))
         # updating screen
         if self.highlighted == True:
-            pygame.draw.rect(screen, "darkblue", self.rect.inflate(9, 9))
+            pygame.draw.rect(screen, "yellow", self.rect.inflate(9, 9))
         screen.blit(self.image[player], self.rect)
 
     def IfCardClicked(self, position):
@@ -183,12 +183,14 @@ class Player:
     def __init__(self):
         self.name = None
         self.hand = None
+        self.max_cards = 7
+        self.first_card_index = 0
         self.drawn_cards = 0
         self.picked_cards = 0
         self.discard_list = []
         self.region = None
-        self.active = False
         self.selected = False
+        self.active = False
     
     def __eq__(self, other):
         if not isinstance(other, Player):
@@ -201,14 +203,15 @@ class Player:
     def draw_card(self, deck):
         draw_card = deck.cards.pop()
         self.hand.collection.append(draw_card)
+        self.first_card_index = (len(self.hand.collection) // self.max_cards) * self.max_cards
         self.drawn_cards += 1      
 
     def pick_card(self, other):
         picked_card = choice(other.hand.collection)
         other.hand.collection.remove(picked_card)
         self.hand.collection.append(picked_card)
+        self.first_card_index = (len(self.hand.collection) // self.max_cards) * self.max_cards
         self.picked_cards += 1
-
 
     def discard_group(self, deck):
         if CollectionOfCards(self.discard_list).is_valid_group():
@@ -236,28 +239,52 @@ class Player:
     def is_winner(self):
         return len(self.hand.collection) == 0
 
-
     def update(self, screen):
-        if self.hand is not None:
+        if self.hand:
+            scroll_buffer = None
+            if self.first_card_index < 0:
+                self.first_card_index = 0
+
+            elif len(self.hand.collection) <= self.max_cards:
+                self.first_card_index = 0
+                scroll_buffer = len(self.hand.collection)
+
+            elif len(self.hand.collection) == self.first_card_index:
+                scroll_buffer = self.first_card_index
+                self.first_card_index -= self.max_cards
+
+            elif len(self.hand.collection) < self.first_card_index:
+                self.first_card_index = (len(self.hand.collection) // self.max_cards) * self.max_cards
+                scroll_buffer = self.first_card_index + len(self.hand.collection) % self.max_cards
+                
+            elif len(self.hand.collection) > self.first_card_index:
+                if self.first_card_index + self.max_cards > len(self.hand.collection):
+                    scroll_buffer = self.first_card_index + len(self.hand.collection) % self.max_cards
+                else:
+                    scroll_buffer = self.first_card_index + self.max_cards
+
             if self.name == "player1":
                 x_pos = self.region.center[0] - (70 * len(self.hand.collection) / 2)
                 y_pos = self.region.center[1]
-                for card in self.hand.collection:
+                for card in self.hand.collection[self.first_card_index : scroll_buffer]:
                     card.update(screen, (x_pos, y_pos), self.name)
                     x_pos += card.image[self.name].get_width()
+
             elif self.name == "player2":
                 x_pos = self.region.center[0] - (70 * len(self.hand.collection) / 2)
                 y_pos = self.region.center[1]
-                for card in self.hand.collection:
+                for card in self.hand.collection[self.first_card_index : scroll_buffer]:
                     card.update(screen, (x_pos, y_pos), self.name)
                     x_pos += card.image[self.name].get_width()
 
             elif self.name == "player3":
                 x_pos = self.region.center[0]
-                y_pos = self.region.center[1] - (90 * len(self.hand.collection) / 2)
-                for card in self.hand.collection:
+                y_pos = self.region.center[1] - (70 * len(self.hand.collection) / 2)
+                for card in self.hand.collection[self.first_card_index : scroll_buffer]:
                     card.update(screen, (x_pos, y_pos), self.name)
                     y_pos += card.image[self.name].get_height()
+
+
 
 class HumanPlayer(Player):
     pass
@@ -272,7 +299,7 @@ class ComputerPlayer(Player):
             while self.active:
                 random_choice = choice(move_list)
                 if random_choice == "draw":
-                    if self.drawn_cards <3:
+                    if self.drawn_cards < 3:
                         self.draw_card(deck)
                     else:
                         move_list.remove("draw")
@@ -283,11 +310,16 @@ class ComputerPlayer(Player):
                 elif random_choice == "discard":
                     for card in self.hand.find_largest_valid_group():
                         self.hand.collection.remove(card)
-                        deck.append(card)
+                        deck.cards.append(card)
                     deck.shuffleDeck()
                 elif random_choice == "end":
-                    self.end_turn()       
+                    self.end_turn()
 
+        elif difficulty == "medium":
+            pass
+
+        elif difficulty == "difficult":
+            pass
 
 def probability_of_valid_group(card_collection_list):
     hand = card_collection_list[0] # Player 1 hand

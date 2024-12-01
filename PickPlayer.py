@@ -1,5 +1,6 @@
 import pygame
 import sys
+from os.path import join
 from GameSetup import GameSetup
 from GameStateManager import GameStateManager
 from Button import Button
@@ -9,26 +10,24 @@ from PickDifficulty import PickDifficulty
 class PickPlayer(GameSetup):
     def __init__(self, screen, clock, manager):
         super().__init__(screen, clock, manager)
-        # self.background_image = pygame.image.load("images/menu/background.png")
-
+        self.background_image = pygame.image.load(join("images","backgrounds", "chooseplayer.png"))
         # self.background_audio = pygame.mixer.Sound("audio/background.wav")
-
         # Playing the background audio
         # self.play_background_music(volume=0.2)
-    
+        font_style = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 75)
         self.objects = [
-            Button(
+            Button("2player",
             pos=(self.screen.get_width() // 2, 300), # Position of the button
             text_input="2 PLAYER", # Text displayed on the button
-            font=pygame.font.Font("images/menu/font.ttf", 75), # Font of the text
+            font=font_style, # Font of the text
             base_colour="White", # Base colour of the button
             hovering_colour="Yellow", # colour of the button when hovered over
             ),
 
-            Button(
+            Button("3player",
             pos=(self.screen.get_width() // 2, 500),
             text_input="3 PLAYER",
-            font=pygame.font.Font("images/menu/font.ttf", 75),
+            font=font_style,
             base_colour="White",
             hovering_colour="Yellow")]
 
