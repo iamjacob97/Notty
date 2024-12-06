@@ -1,10 +1,9 @@
 import pygame
 import sys
-from Button import *
 from GameSetup import *
-from GameStateManager import *
+from Button import *
 from CollectionOfCards import *
-
+from GameOver import GameOver
 
 class MainGame(GameSetup):
     def __init__(self, screen, clock, manager):
@@ -12,13 +11,9 @@ class MainGame(GameSetup):
         self.background_image = pygame.image.load(join("images", "backgrounds", "gamescreen.png"))
         self.font = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 17)
         self.deck = Deck(((self.screen.get_width()//2), (self.screen.get_height()//2)))
-        # self.players = [HumanPlayer()]
-        # for _ in range(self.manager.get_shared_data()["numberofplayers"] - 1):
-        #     self.players.append(ComputerPlayer())
-        if self.manager.get_shared_data()["numberofplayers"] == 2:
-            self.players = [HumanPlayer(), ComputerPlayer()]
-        elif self.manager.get_shared_data()["numberofplayers"] == 3:
-            self.players = [HumanPlayer(), HumanPlayer(), HumanPlayer()]
+        self.players = [HumanPlayer()]
+        for _ in range(self.manager.get_shared_data()["numberofplayers"] - 1):
+            self.players.append(ComputerPlayer())
         for i, player in enumerate(self.players):
             player.name = f"player{i + 1}"
             if i == 0:
@@ -28,7 +23,7 @@ class MainGame(GameSetup):
                 player.region = pygame.Rect((self.screen.get_width()//16) * 3, 0, 
                                             (self.screen.get_width()//16) * 9, (self.screen.get_height()//16) * 4)
             elif i == 2:
-                player.region = pygame.Rect(0, (self.screen.get_height()//16) * 2, 
+                player.region = pygame.Rect(0, (self.screen.get_height()//16), 
                                             (self.screen.get_width()//16) * 3, (self.screen.get_height()//16) * 12)
                 player.max_cards = 5
         self.player_index = 0
@@ -107,6 +102,7 @@ class MainGame(GameSetup):
         for button in self.buttons[len(self.players):]:
                 button.base_colour = "white"
                 button.hovering_colour = "green"
+        print(len(self.deck.cards))
 
     def computer_move(self):
         non_current_players = [player for player in self.players if player != self.current_player]
@@ -169,8 +165,9 @@ class MainGame(GameSetup):
                             self.current_player.pick_card(selected_player)
                             if selected_player.is_winner():
                                 self.manager.shared_data["winner"] = selected_player.name
-                                print(self.manager.get_shared_data())
-                                print(f"{selected_player.name} is the winner")
+                                self.manager.change_state(GameOver(self.screen, self.clock, self.manager))
+                                self.running = False
+
                             button.base_colour = "red"
                             button.hovering_colour = "red"                                                
                         else:
@@ -181,13 +178,23 @@ class MainGame(GameSetup):
                             if self.current_player.discard_group(self.deck):
                                 if self.current_player.is_winner():
                                     self.manager.shared_data["winner"] = self.current_player.name
-                                    print(self.manager.get_shared_data())
-                                    print(f"{self.current_player.name} is the winner")
+                                    self.manager.change_state(GameOver(self.screen, self.clock, self.manager))
+                                    self.running = False
                             else:
                                 self.showLabel(Label((self.screen.get_width()//2, self.screen.get_height()//3), "NOT A VALID GROUP", self.font, "yellow"))
                         else:
-                            self.showLabel(Label((self.screen.get_width()//2, self.screen.get_height()//3), "YOU NEED AT LEAST 3 CARDS", self.font, "yellow"))
-                    
+                            self.showLabel(Label((self.screen.get_width()//2, self.screen.get_height()//3), "SELECT AT LEAST 3 CARDS", self.font, "yellow"))
+
+                    if button.name == "play" and button.IfButtonClicked(event.pos):
+                        non_current_players = [player for player in self.players if player != self.current_player]
+                        self.current_player.play_for_me(self.deck, non_current_players)
+                        for player in self.players:
+                            if player.is_winner():
+                                self.manager.shared_data["winner"] = player.name
+                                self.manager.change_state(GameOver(self.screen, self.clock, self.manager))
+                                self.running = False
+                        self.next_player()
+
                     if button.name == "end" and button.IfButtonClicked(event.pos):
                         self.current_player.end_turn()
                         self.next_player()
@@ -203,23 +210,23 @@ class MainGame(GameSetup):
                         self.draw()
                     
                     if button.name == "player2-prev" and button.IfButtonClicked(event.pos):
-                        self.players[1].first_card_index -= self.players[0].max_cards
+                        self.players[1].first_card_index -= self.players[1].max_cards
                         if self.players[1].first_card_index < 0:
                             self.players[1].first_card_index = 0
                         self.draw()
                     
                     if button.name == "player2-next" and button.IfButtonClicked(event.pos):
-                        self.players[1].first_card_index += self.players[0].max_cards
+                        self.players[1].first_card_index += self.players[1].max_cards
                         self.draw()
 
                     if button.name == "player3-prev" and button.IfButtonClicked(event.pos):
-                        self.players[2].first_card_index -= self.players[0].max_cards
+                        self.players[2].first_card_index -= self.players[2].max_cards
                         if self.players[2].first_card_index < 0:
                             self.players[2].first_card_index = 0
                         self.draw()
                     
                     if button.name == "player3-next" and button.IfButtonClicked(event.pos):
-                        self.players[2].first_card_index += self.players[0].max_cards
+                        self.players[2].first_card_index += self.players[2].max_cards
                         self.draw()
 
                 if self.current_player.hand:
@@ -252,10 +259,18 @@ class MainGame(GameSetup):
     def run(self):
         while self.running:
             self.clock.tick(60)
+
             if type(self.current_player) == HumanPlayer:
                 self.main_game_events()
+                
             else:
                 self.computer_move()
+                for player in self.players:
+                    if player.is_winner():
+                        self.manager.shared_data["winner"] = player.name
+                        self.manager.change_state(GameOver(self.screen, self.clock, self.manager))
+                        self.running = False
+                        
             self.draw()
             
             

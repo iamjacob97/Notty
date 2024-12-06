@@ -1,11 +1,9 @@
 import pygame
 import sys
 from os.path import join
-from GameSetup import GameSetup
-from GameStateManager import GameStateManager
 from Button import Button
+from GameSetup import GameSetup
 from PickPlayer import PickPlayer
-
 
 class Menu(GameSetup):
     def __init__(self, screen, clock, manager):
@@ -16,7 +14,7 @@ class Menu(GameSetup):
         self.background_audio = pygame.mixer.Sound(join("audio", "background.wav"))
 
         # # Playing the background audio
-        self.play_background_music(volume=0.2)
+        self.play_background_music(volume=0.05)
         # Loading font
         font_style = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 57)
         # Creating buttons using the Button class and storing them in a list
@@ -83,27 +81,27 @@ class Menu(GameSetup):
 
 
     def show_instructions(self):
+        """
+        Displays the instructions on the screen, ensuring text fits within the screen width.
+        """
         # Read instructions from file
-        with open("instructions.txt", 'r') as file:
-            instructions = file.readlines()
+        instructions = self.load_instructions("instructions.txt")
+
+        # Load background
         background = pygame.image.load(join("images", "backgrounds", "instructions.png"))
+        font = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 17)
+
+        # Display instructions
         show_instructions_screen = True
         while show_instructions_screen:
-            self.screen.blit(background, (0, 0))          
-            font = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 17)
-            # Loop through each line in the instructions list with an index
-            for i, line in enumerate(instructions):
-                # Render the text using the specified font removing any leading/trailing whitespace and setting the colour to white
-                instructions_text = font.render(line.strip(), True, "White")
+            self.screen.blit(background, (0, 0))  # Draw background
 
-                # Display the text using the blit method
-                self.screen.blit(
-                    instructions_text,
-                    (self.screen.get_width() // 2 - instructions_text.get_width() // 2, 100 + i * 50))
-            
+            # # Render the instructions text on the screen, breaking lines that exceed the screen width.
+            self.render_breaked_text(instructions, font, max_width=self.screen.get_width() - 40, start_y=100)
 
-            # Creating a back button
-            back_button = Button("back",
+                        # Create the back button
+            back_button = Button(
+                name="back",
                 pos=(self.screen.get_width() // 2, self.screen.get_height() - 100),
                 text_input="BACK",
                 font=pygame.font.Font(join("images", "backgrounds", "font.ttf"), 21),
@@ -115,7 +113,7 @@ class Menu(GameSetup):
             back_button.changeColour(pygame.mouse.get_pos())
             back_button.update(self.screen)
 
-            # menu events
+            # Event handling
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -123,8 +121,51 @@ class Menu(GameSetup):
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if back_button.IfButtonClicked(pygame.mouse.get_pos()):
                         show_instructions_screen = False
+            pygame.display.flip() 
 
-            pygame.display.flip() # Update the display
+    def load_instructions(self, file_path):
+        with open(file_path, 'r') as file:
+            instructions = file.readlines()
+        return instructions
+
+
+    def render_breaked_text(self, instructions, font, max_width, start_y):
+        #vertical position for text rendering.
+        y_offset = start_y
+        # Define the vertical space between lines.
+        line_height = 25  
+
+        #looping through each line of instructions.
+        for line in instructions:
+        # Split the line into individual words.
+            words = line.strip().split(' ')
+        # Initialising the current line as an empty string.
+            current_line = ""
+        # loop through each word in the line.
+            for word in words:
+        # Add the word to the current line with a space.
+                test_line = f"{current_line}{word} "
+        # Check if the line width is within the max width.
+                if font.size(test_line)[0] < max_width:
+        # Update the current line if it fits.
+                    current_line = test_line
+                else:
+        # Render the current line to the screen.
+                    self.render_line(current_line, font, y_offset)
+        # Move to the next line's vertical position.
+                    y_offset += line_height
+                    current_line = f"{word} "
+
+            # places or renders the current line of text onto the screen.
+            self.render_line(current_line, font, y_offset)
+            # adjusts the vertical position down by the height of one line to prepare for the next line.
+            y_offset += line_height
+
+    # Create a surface for the line of text.
+    def render_line(self, line, font, y_offset): 
+        rendered_text = font.render(line.strip(), True, "White")
+        # Draw the rendered text onto the screen.
+        self.screen.blit(rendered_text, (20, y_offset))
 
 
     # adding logic to buttons in the menu

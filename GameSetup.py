@@ -11,6 +11,7 @@ class GameSetup:
 
         # Loading background image
         self.background_image = None
+        # self.icon = 
 
         #Loadin audio files for the menu
         self.background_audio = None

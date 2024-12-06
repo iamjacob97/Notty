@@ -3,7 +3,7 @@ from os.path import join
 from random import choice, shuffle
 
 class Card: 
-    def __init__(self, colour, number): 
+    def __init__(self, colour, number): # card attributes
         assert isinstance(number, int)
         self.colour = colour 
         self.number = number
@@ -14,6 +14,9 @@ class Card:
         self.mask = None
         self.highlighted = False
 
+    def __repr__(self):
+        return f"{self.colour} {self.number}"
+
     def __eq__(self, other):
         if not isinstance(other, Card):
             return False
@@ -22,7 +25,7 @@ class Card:
     def __hash__(self):
         return hash((self.colour, self.number))    
     
-    def update(self, screen, pos, player):
+    def update(self, screen, pos, player): # updating card visuals
         if not self.image:
             image = pygame.image.load(join("images", "notty_cards", f"{self.colour} {self.number}.png")).convert()
             self.image["player1"] = image
@@ -150,6 +153,24 @@ class CollectionOfCards:
         
         return []
     
+    def find_probability(self, card_list): # finding probability of valid group in a given list
+        valid_group = 0
+        temp_list = []
+
+        for card in  card_list:
+            temp_list.append(Card(card.colour, card.number))
+
+        while temp_list:
+            self.collection.append(temp_list.pop())
+            if self.find_valid_group():
+                valid_group += 1
+            self.collection.pop()
+        
+        probability = valid_group/len(card_list)
+
+        return probability
+
+    
 
 class Deck:
     def __init__(self, pos):
@@ -166,7 +187,7 @@ class Deck:
     def shuffleDeck(self):
         shuffle(self.cards)
 
-    def deal_cards(self, player_list):
+    def deal_cards(self, player_list): # dealing cards at the beginning of the game
         self.shuffleDeck()
         for i in range(len(player_list)):    
             collection = []
@@ -191,6 +212,10 @@ class Player:
         self.region = None
         self.selected = False
         self.active = False
+        self.no_play = 0
+
+    def __repr__(self):
+        return f"{self.name}"
     
     def __eq__(self, other):
         if not isinstance(other, Player):
@@ -204,7 +229,8 @@ class Player:
         draw_card = deck.cards.pop()
         self.hand.collection.append(draw_card)
         self.first_card_index = (len(self.hand.collection) // self.max_cards) * self.max_cards
-        self.drawn_cards += 1      
+        self.drawn_cards += 1   
+        self.no_play = 0   
 
     def pick_card(self, other):
         picked_card = choice(other.hand.collection)
@@ -212,6 +238,7 @@ class Player:
         self.hand.collection.append(picked_card)
         self.first_card_index = (len(self.hand.collection) // self.max_cards) * self.max_cards
         self.picked_cards += 1
+        self.no_play = 0
 
     def discard_group(self, deck):
         if CollectionOfCards(self.discard_list).is_valid_group():
@@ -221,12 +248,193 @@ class Player:
                 deck.cards.append(card)
             self.discard_list.clear()
             deck.shuffleDeck()
-            return True
+            self.no_play = 0
+            return True        
         else:
             return False
+        
+    def build_playable_groups(self):
+        sequences = []
+        num_set = []
+        colour_record, num_record = self.hand.record_builder()            
+
+        checked_nums = set() # Keeping track of checked numbers
+        for c, n in colour_record.items():
+            sorted_numbers = sorted(set(n)) # returns list of sorted numbers without duplicates
+            temp_nums = [-2] # To record sequences            
+
+            for num in sorted_numbers:                 
+                if temp_nums[-1] + 1 == num or temp_nums[-1] + 2 == num: 
+                    temp_nums.append(num) # Growing sequence                       
+                else:
+                    if len(temp_nums) > 1:                        
+                        sequences.append([Card(c, number) for number in temp_nums]) # Only adding if current sequence length > 1
+                    temp_nums = [num] # Reset due to break in sequence
+
+                if num not in checked_nums:
+                    colours = set(num_record[num])
+                    if len(colours) > 1: # checking for same number, different colour
+                        num_set.append([Card(colour, num) for colour in colours])
+                    checked_nums.add(num)
+
+            if len(temp_nums) > 1: # Final sequence check                
+                sequences.append([Card(c, number) for number in temp_nums])
+
+        return sequences + num_set
     
-    def play_for_me(self, deck, player_list):
-        pass
+    def attempt_to_discard(self, deck, num_priority_index, hand_priority_average, checklist):
+            if hand_priority_average < 3: # for low priority hand, discard any group
+                if self.hand.find_valid_group():
+                    for card in self.hand.find_largest_valid_group():
+                        self.hand.collection.remove(card)
+                        deck.cards.append(card)
+                    deck.shuffleDeck()
+                    self.no_play = 0
+                    return True
+
+            for card_set in checklist: # for high priority hand trying to discard high priority cards
+                set_collection = CollectionOfCards(card_set)
+                largest_valid = set_collection.find_largest_valid_group()
+                if not largest_valid:
+                    continue
+
+                set_collection_average = sum(num_priority_index[card.number] for card in largest_valid) / len(largest_valid)
+
+                if set_collection_average >= hand_priority_average:
+                    remove_cards = []
+                    for card in largest_valid:
+                        for my_card in self.hand.collection:
+                            if card == my_card:
+                                remove_cards.append(my_card)
+                                break
+                    for card in remove_cards:                        
+                        self.hand.collection.remove(card)
+                        deck.cards.append(card)
+                    deck.shuffleDeck()
+                    self.no_play = 0
+                    return True
+
+    def attempt_to_pick(self, non_current_players, num_priority_index, hand_priority_average, checklist):
+        if hand_priority_average < 3:            
+            max_pick = (None, 0)
+
+            for player in non_current_players:
+                pick_probability = self.hand.find_probability(player.hand.collection)
+                if pick_probability > max_pick[1]:
+                    max_pick = (player, pick_probability)
+
+            if max_pick[1] > 0:
+                if max_pick[1] > (len(self.hand.collection)/3) / len(self.hand.collection):
+                    if len(max_pick[0].hand.collection) > 1:
+                        self.pick_card(max_pick[0])
+                        self.no_play = 0
+                        return True
+            else:
+                if len(self.hand.collection) < 3:
+                    self.pick_card(choice(non_current_players))
+                    self.no_play = 0
+                    return True
+
+        max_pick_priority = {}
+
+        for card_set in checklist:                    
+            set_collection = CollectionOfCards(card_set)
+            valid_length = 0
+            if set_collection.find_valid_group():
+                valid_length = len(set_collection.find_largest_valid_group())
+
+            for player in non_current_players:
+                temp_set = [Card(card.colour, card.number) for card in player.hand.collection]
+
+                while temp_set:
+                    set_collection.collection.append(temp_set.pop())
+                    priority_check_collection = set_collection.find_largest_valid_group()
+                    if priority_check_collection: 
+                        if len(priority_check_collection) > valid_length:
+                            max_priority_average = sum(num_priority_index[card.number] for card in priority_check_collection) / len(priority_check_collection)
+                            if max_priority_average > max_pick_priority.get(player, 0):
+                                max_pick_priority[player] = max_priority_average                               
+                
+                    set_collection.collection.pop()                    
+        sorted_players = sorted(max_pick_priority, key=lambda player: max_pick_priority[player])
+        for player in sorted_players:
+            player_hand_priority_average = sum(num_priority_index[card.number] for card in player.hand.collection) / len(player.hand.collection)
+            if max_pick_priority[player] >= hand_priority_average and hand_priority_average >= player_hand_priority_average:
+                self.pick_card(player)
+                self.no_play = 0
+                return True
+                            
+
+    def attempt_to_draw(self, deck, num_priority_index, hand_priority_average, checklist):
+        draw_probability = self.hand.find_probability(deck.cards)
+        if draw_probability > 0:
+            if draw_probability > (len(self.hand.collection)/3) / len(deck.cards):
+                self.draw_card(deck)
+                self.no_play = 0
+                return True
+            else:
+                if len(self.hand.collection) < 3:
+                    self.draw_card(deck)
+                    self.no_play = 0
+                    return True           
+                
+    
+    def play_for_me(self, deck, non_current_players):
+        while self.active:
+            num_priority_index = {1 : 5, 2 : 4, 3 : 3, 4 : 2, 5 : 1, 6 : 1, 7 : 2, 8 : 3, 9 : 4, 10 : 5}
+            hand_priority_average = sum(num_priority_index[card.number] for card in self.hand.collection) / len(self.hand.collection)        
+            checklist = self.build_playable_groups()       
+
+            if checklist:
+                if self.attempt_to_discard(deck, num_priority_index, hand_priority_average, checklist):
+                    continue
+                
+                if self.picked_cards < 1 and self.attempt_to_pick(non_current_players, num_priority_index, hand_priority_average, checklist):
+                    continue
+                
+                if self.drawn_cards < 3 and self.attempt_to_draw(deck, num_priority_index, hand_priority_average, checklist):
+                    continue                            
+
+            else: 
+                if self.picked_cards < 1:
+                    max_pick = (None, 0)
+
+                    for player in non_current_players:
+                        pick_probability = self.hand.find_probability(player.hand.collection)
+                        if pick_probability > max_pick[1]:
+                            max_pick = (player, pick_probability)
+
+                    if max_pick[1] > 0:
+                        if max_pick[1] > (len(self.hand.collection)/3) / len(self.hand.collection):
+                            if len(max_pick[0].hand.collection) > 1:
+                                self.pick_card(max_pick[0])
+                                self.no_play = 0
+                                continue
+                    else:
+                        if len(self.hand.collection) < 3:
+                            self.pick_card(choice(non_current_players))
+                            self.no_play = 0
+                            continue
+                        
+                if self.drawn_cards < 3:
+                    draw_probability = self.hand.find_probability(deck.cards)
+                    if draw_probability > 0:
+                        if draw_probability > (len(self.hand.collection)/3) / len(deck.cards):
+                            self.draw_card(deck)
+                            self.no_play = 0
+                            continue
+                    else:
+                        if len(self.hand.collection) < 3:
+                            self.draw_card(deck)
+                            self.no_play = 0
+                            continue
+                
+                self.no_play += 1
+                if self.no_play >= 3 and self.drawn_cards < 3:
+                    self.draw_card(deck)
+                    continue
+
+            self.end_turn()        
 
     def end_turn(self):
         self.drawn_cards = 0
@@ -285,14 +493,13 @@ class Player:
                     card.update(screen, (x_pos, y_pos), self.name)
                     y_pos += card.image[self.name].get_height() + gap_between_cards
 
-
-
 class HumanPlayer(Player):
     pass
 
 class ComputerPlayer(Player):
     def __init__(self):
         super().__init__()
+        
 
     def make_move(self, difficulty, deck, non_current_players):
         if difficulty == "easy":
@@ -304,62 +511,69 @@ class ComputerPlayer(Player):
                         self.draw_card(deck)
                     else:
                         move_list.remove("draw")
+
                 elif random_choice == "pick":
                     if self.picked_cards < 1:
                         self.pick_card(choice(non_current_players))
                         move_list.remove("pick")
+
                 elif random_choice == "discard":
                     for card in self.hand.find_largest_valid_group():
                         self.hand.collection.remove(card)
                         deck.cards.append(card)
                     deck.shuffleDeck()
+
                 elif random_choice == "end":
                     self.end_turn()
 
         elif difficulty == "medium":
-            pass
+            while self.active:              
+                if self.hand.find_valid_group():
+                    for card in self.hand.find_largest_valid_group():
+                        self.hand.collection.remove(card)
+                        deck.cards.append(card)
+                    deck.shuffleDeck()
+                    self.no_play = 0                
+                
+                if self.picked_cards < 1:
+                    max_pick = (None, 0)
 
-        elif difficulty == "difficult":
-            pass
+                    for player in non_current_players:
+                        pick_probability = self.hand.find_probability(player.hand.collection)
+                        if pick_probability > max_pick[1]:
+                            max_pick = (player, pick_probability)
 
-def probability_of_valid_group(card_collection_list):
-    hand = card_collection_list[0] # Player 1 hand
-    if hand.find_valid_group():
-        return 1
-    
-    colours = ["blue", "red", "yellow", "green"] # List of valid colours
-    numbers = [num for num in range(1, 11)] # List of valid numbers
-    valid_draws = 0
-    deck = []
-    player_cards = []
-    duplicates = 2
+                    if max_pick[1] > 0: #some probability of getting a valid group
+                        if max_pick[1] > (len(self.hand.collection)/3) / len(self.hand.collection): # max number of groups that can be discarded from hand / number of cards in hand
+                            if len(max_pick[0].hand.collection) > 1:
+                                self.pick_card(max_pick[0])
+                                self.no_play = 0
+                                continue
+                    else:
+                        if len(self.hand.collection) < 3:
+                            self.pick_card(choice(non_current_players))
+                            self.no_play = 0
+                            continue
+                        
+                if self.drawn_cards < 3:
+                    draw_probability = self.hand.find_probability(deck.cards)
+                    if draw_probability > 0:
+                        if draw_probability > (len(self.hand.collection)/3) / len(deck.cards):
+                            self.draw_card(deck)
+                            self.no_play = 0
+                            continue
+                    else:
+                        if len(self.hand.collection) < 3:
+                            self.draw_card(deck)
+                            self.no_play = 0
+                            continue
+                
+                self.no_play += 1
+                if self.no_play >= 3 and self.drawn_cards < 3:
+                    self.draw_card(deck)
+                    continue
+                self.end_turn()               
 
-    for colour in colours:
-        for number in numbers:
-            deck += [Card(colour, number)] * duplicates
-
-    for card_collection in card_collection_list:
-        player_cards += [card for card in card_collection.collection]
-
-    removed_cards = []
-    for player_card in player_cards:
-        for card in deck:
-            if card == player_card:
-                removed_cards.append(card)
-                break
-        
-    for card in removed_cards:
-        deck.remove(card)
-
-    deck_len = len(deck)
-
-    while deck:
-        hand.collection.append(deck.pop()) # removing from real deck and adding to player 1 hand 
-        if hand.find_valid_group():
-            valid_draws += 1 # Counting successful draws
-        hand.collection.pop() # Resetting player 1 hand
-    
-    probability = valid_draws / deck_len # Checking with deck since real_deck became empty
-    
-    return probability
+        elif difficulty == "hard":
+            self.play_for_me(deck, non_current_players)
 

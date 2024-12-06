@@ -1,11 +1,9 @@
 import pygame
 import sys
 from os.path import join
-from GameSetup import GameSetup
-from GameStateManager import GameStateManager
 from Button import Button
+from GameSetup import GameSetup
 from PickDifficulty import PickDifficulty
-
 
 class PickPlayer(GameSetup):
     def __init__(self, screen, clock, manager):
