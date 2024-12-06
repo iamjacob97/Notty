@@ -9,9 +9,6 @@ class PickDifficulty(GameSetup):
     def __init__(self, screen, clock, manager):
         super().__init__(screen, clock, manager)
         self.background_image = pygame.image.load(join("images", "backgrounds", "difficulty.png"))
-        # self.background_audio = pygame.mixer.Sound("audio/background.wav")
-        # Playing the background audio
-        # self.play_background_music(volume=0.2)
         font_style = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 57)
         self.objects = [
             Button("easy",

@@ -13,14 +13,21 @@ class GameOver(GameSetup):
         # Load background image
         self.background = pygame.image.load(join("images", "backgrounds", "gameover.png"))
 
+
+        self.background_audio = pygame.mixer.Sound(join("audio", "background.wav"))
+        self.congrats_audio = pygame.mixer.Sound(join("audio", "congrats.mp3"))
+
         #title for the font
         font_style = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 35)
         button_font = pygame.font.Font(join("images", "backgrounds", "font.ttf"), 30)
 
+        self.play_background_music(volume=0.05)
+
         # Label for winner
+        self.congrats_audio.play()
         self.label_text = f"Congratulations {self.winner_name.upper()} Wins!"
         self.label = Label((self.screen.get_width() // 2, self.screen.get_height() // 3), 
-                           self.label_text, font_style, "darkblue")
+                           self.label_text, font_style, "green")
         
    
         self.GameOverButtons = [
@@ -43,7 +50,7 @@ class GameOver(GameSetup):
             ),
         ]
 
-    def draw(self):
+    def draw(self): #puts everything on the screen
         self.screen.blit(self.background, (0, 0))  
         self.label.update(self.screen)  
         for button in self.GameOverButtons: 
@@ -61,11 +68,12 @@ class GameOver(GameSetup):
                 for button in self.GameOverButtons:
                     button.changeColour(pygame.mouse.get_pos())
                     if button.IfButtonClicked(event.pos):
-                        if button.name == "New Game":
+                        if button.name == "New Game": #starts new game
+                            self.stop_background_music() # Stop the background music
                             from PickPlayer import PickPlayer
                             self.manager.change_state(PickPlayer(self.screen, self.clock, self.manager))
                             self.running = False 
-                        elif button.name == "Quit":
+                        elif button.name == "Quit": # quits the game
                             pygame.quit()
                             sys.exit()
 

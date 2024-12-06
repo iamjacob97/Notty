@@ -17,7 +17,7 @@ class Card:
     def __repr__(self):
         return f"{self.colour} {self.number}"
 
-    def __eq__(self, other):
+    def __eq__(self, other): # compares other cards by colour and number
         if not isinstance(other, Card):
             return False
         return self.colour == other.colour and self.number == other.number
@@ -172,7 +172,7 @@ class CollectionOfCards:
 
     
 
-class Deck:
+class Deck: # Deck class
     def __init__(self, pos):
         self.cards = []
         colours = ["blue", "red", "yellow", "green"]
@@ -200,15 +200,15 @@ class Deck:
     
 
 
-class Player:
+class Player: 
     def __init__(self):
         self.name = None
         self.hand = None
-        self.max_cards = 7
-        self.first_card_index = 0
+        self.max_cards = 7 # maximum cards on screen at a time
+        self.first_card_index = 0 #index of fist card on screen
         self.drawn_cards = 0
         self.picked_cards = 0
-        self.discard_list = []
+        self.discard_list = [] #keeps track of selected cards to discard
         self.region = None
         self.selected = False
         self.active = False
@@ -225,14 +225,14 @@ class Player:
     def __hash__(self):
         return hash(self.name)
 
-    def draw_card(self, deck):
+    def draw_card(self, deck): #draw card logic
         draw_card = deck.cards.pop()
         self.hand.collection.append(draw_card)
         self.first_card_index = (len(self.hand.collection) // self.max_cards) * self.max_cards
         self.drawn_cards += 1   
         self.no_play = 0   
 
-    def pick_card(self, other):
+    def pick_card(self, other): # pick card logic
         picked_card = choice(other.hand.collection)
         other.hand.collection.remove(picked_card)
         self.hand.collection.append(picked_card)
@@ -240,7 +240,7 @@ class Player:
         self.picked_cards += 1
         self.no_play = 0
 
-    def discard_group(self, deck):
+    def discard_group(self, deck): # discard groups in discard list
         if CollectionOfCards(self.discard_list).is_valid_group():
             for card in self.discard_list:
                 card.highlighted = False
@@ -253,7 +253,7 @@ class Player:
         else:
             return False
         
-    def build_playable_groups(self):
+    def build_playable_groups(self): # makes sequences of playable groups
         sequences = []
         num_set = []
         colour_record, num_record = self.hand.record_builder()            
@@ -282,7 +282,7 @@ class Player:
 
         return sequences + num_set
     
-    def attempt_to_discard(self, deck, num_priority_index, hand_priority_average, checklist):
+    def attempt_to_discard(self, deck, num_priority_index, hand_priority_average, checklist): # Uses number priority to make play
             if hand_priority_average < 3: # for low priority hand, discard any group
                 if self.hand.find_valid_group():
                     for card in self.hand.find_largest_valid_group():
@@ -294,13 +294,13 @@ class Player:
 
             for card_set in checklist: # for high priority hand trying to discard high priority cards
                 set_collection = CollectionOfCards(card_set)
-                largest_valid = set_collection.find_largest_valid_group()
+                largest_valid = set_collection.find_largest_valid_group() #largest valid group in card set
                 if not largest_valid:
                     continue
 
-                set_collection_average = sum(num_priority_index[card.number] for card in largest_valid) / len(largest_valid)
+                set_collection_average = sum(num_priority_index[card.number] for card in largest_valid) / len(largest_valid)  # priority average of the set
 
-                if set_collection_average >= hand_priority_average:
+                if set_collection_average >= hand_priority_average: #Only discard the sets that have priority more than hand_average
                     remove_cards = []
                     for card in largest_valid:
                         for my_card in self.hand.collection:
@@ -315,13 +315,13 @@ class Player:
                     return True
 
     def attempt_to_pick(self, non_current_players, num_priority_index, hand_priority_average, checklist):
-        if hand_priority_average < 3:            
+        if hand_priority_average < 3: # picks player with maximum probability            
             max_pick = (None, 0)
 
             for player in non_current_players:
                 pick_probability = self.hand.find_probability(player.hand.collection)
                 if pick_probability > max_pick[1]:
-                    max_pick = (player, pick_probability)
+                    max_pick = (player, pick_probability) # player with the maximum probability of getting valid group from
 
             if max_pick[1] > 0:
                 if max_pick[1] > (len(self.hand.collection)/3) / len(self.hand.collection):
@@ -330,12 +330,12 @@ class Player:
                         self.no_play = 0
                         return True
             else:
-                if len(self.hand.collection) < 3:
+                if len(self.hand.collection) < 3: # if less than 3 cards and no pick probability
                     self.pick_card(choice(non_current_players))
                     self.no_play = 0
                     return True
 
-        max_pick_priority = {}
+        max_pick_priority = {} # picks player that gives max priority valid group
 
         for card_set in checklist:                    
             set_collection = CollectionOfCards(card_set)
@@ -381,20 +381,20 @@ class Player:
     
     def play_for_me(self, deck, non_current_players):
         while self.active:
-            num_priority_index = {1 : 5, 2 : 4, 3 : 3, 4 : 2, 5 : 1, 6 : 1, 7 : 2, 8 : 3, 9 : 4, 10 : 5}
-            hand_priority_average = sum(num_priority_index[card.number] for card in self.hand.collection) / len(self.hand.collection)        
-            checklist = self.build_playable_groups()       
+            num_priority_index = {1 : 5, 2 : 4, 3 : 3, 4 : 2, 5 : 1, 6 : 1, 7 : 2, 8 : 3, 9 : 4, 10 : 5} #priority index based on availabioity of possible valid groups
+            hand_priority_average = sum(num_priority_index[card.number] for card in self.hand.collection) / len(self.hand.collection) #average priority of cards in hand       
+            checklist = self.build_playable_groups()  # builds playable groups     
 
             if checklist:
-                if self.attempt_to_discard(deck, num_priority_index, hand_priority_average, checklist):
-                    continue
+                if self.attempt_to_discard(deck, num_priority_index, hand_priority_average, checklist): 
+                    continue # continue loop from start
                 
                 if self.picked_cards < 1 and self.attempt_to_pick(non_current_players, num_priority_index, hand_priority_average, checklist):
-                    continue
+                    continue # continue loop from start
                 
                 if self.drawn_cards < 3 and self.attempt_to_draw(deck, num_priority_index, hand_priority_average, checklist):
-                    continue                            
-
+                    continue # continue loop from start                            
+            # plays like medium computer when there is no checklist to work with
             else: 
                 if self.picked_cards < 1:
                     max_pick = (None, 0)
@@ -436,7 +436,7 @@ class Player:
 
             self.end_turn()        
 
-    def end_turn(self):
+    def end_turn(self): # end turn logic - resets everything
         self.drawn_cards = 0
         self.picked_cards = 0
         for card in self.discard_list:
@@ -447,27 +447,27 @@ class Player:
     def is_winner(self):
         return len(self.hand.collection) == 0
 
-    def update(self, screen):
+    def update(self, screen): # updates all player cards on screen
         if self.hand:
-            scroll_buffer = None
+            scroll_buffer = None # calculates the last card of the list slice on screen
 
-            if len(self.hand.collection) <= self.max_cards:
+            if len(self.hand.collection) <= self.max_cards: # reset to 0
                 self.first_card_index = 0
-                scroll_buffer = len(self.hand.collection)
+                scroll_buffer = len(self.hand.collection) 
 
-            elif len(self.hand.collection) == self.first_card_index:
+            elif len(self.hand.collection) == self.first_card_index: # if equal to first card index starts from first card - max_cards
                 scroll_buffer = self.first_card_index
                 self.first_card_index -= self.max_cards
 
-            elif len(self.hand.collection) < self.first_card_index:
+            elif len(self.hand.collection) < self.first_card_index: # when less than first card index, starts from last scroll
                 self.first_card_index = (len(self.hand.collection) // self.max_cards) * self.max_cards
                 scroll_buffer = self.first_card_index + len(self.hand.collection) % self.max_cards
                 
-            elif len(self.hand.collection) > self.first_card_index:
-                if self.first_card_index + self.max_cards > len(self.hand.collection):
+            elif len(self.hand.collection) > self.first_card_index: 
+                if self.first_card_index + self.max_cards > len(self.hand.collection): # checks for last scroll or not
                     scroll_buffer = self.first_card_index + len(self.hand.collection) % self.max_cards
                 else:
-                    scroll_buffer = self.first_card_index + self.max_cards
+                    scroll_buffer = self.first_card_index + self.max_cards 
 
             gap_between_cards = 5   
             cards_on_screen = scroll_buffer - self.first_card_index
@@ -496,13 +496,13 @@ class Player:
 class HumanPlayer(Player):
     pass
 
-class ComputerPlayer(Player):
+class ComputerPlayer(Player): 
     def __init__(self):
         super().__init__()
         
 
-    def make_move(self, difficulty, deck, non_current_players):
-        if difficulty == "easy":
+    def make_move(self, difficulty, deck, non_current_players): #moves for different difficulties
+        if difficulty == "easy": #random moves
             move_list = ["draw", "pick", "discard", "end"]
             while self.active:
                 random_choice = choice(move_list)
@@ -526,7 +526,7 @@ class ComputerPlayer(Player):
                 elif random_choice == "end":
                     self.end_turn()
 
-        elif difficulty == "medium":
+        elif difficulty == "medium": # more organized
             while self.active:              
                 if self.hand.find_valid_group():
                     for card in self.hand.find_largest_valid_group():
@@ -574,6 +574,6 @@ class ComputerPlayer(Player):
                     continue
                 self.end_turn()               
 
-        elif difficulty == "hard":
+        elif difficulty == "hard": #use priority indexes for numbers and tries to discard high priority cards first
             self.play_for_me(deck, non_current_players)
 

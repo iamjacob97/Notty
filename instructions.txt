@@ -1,16 +1,11 @@
---------------------------- Game Instructions ------------------------
-These instructions outline the key rules for playing the Notty card game.
-1. Once per turn, a player can draw up to 3 cards from the deck.  
-   - The player does not need to decide on the number of cards to draw in advance.
-   - The drawn cards remain face down until the drawing is complete.
+----------------------------Game Instructions-------------------------
+Players take turns.  On a players turn, they can perform any of the following actions, in an arbitrary order: 
+1. (At most once per turn) Draw up to 3 cards from the deck.  They do not need to decide on the number of cards to be drawn in advance, however they cannot see the face of the cards drawn until they finish the drawing. 
+2. (At most once per turn) Choose another player and take a random card from them (in the physical game, the chosen player would shuffle their hand face-down and allow the current player to pick one randomly).
+3. (Any number of times per turn) Discard a valid group of cards. A valid group is either: 
+- A sequence of at least three cards of the same colour with consecutive numbers (e.g. blue 4, blue 5 and blue 6)
+- A set of at least three cards of the same number but different colours (e.g. blue 4, green 4 and red 4).  Note that no repeated colours are allowed in this type of group (e.g. blue 4, red 4 and blue 4 is not a valid group).
+Note that a player is allowed to pass, i.e. take no actions. Every time that cards are discarded, they are added to the deck and the entire deck is reshuffled.
 
-2. Once per turn, a player can choose another player and take a random card from their hand.
-   - The chosen player must shuffle their hand face-down and allow the current player to pick one card randomly.
-
-3. A player may discard a valid group of cards any number of times per turn. 
-   A valid group must be one of the following types:
-   - A sequence of at least three cards of the same color with consecutive numbers (e.g., blue 4, blue 5, blue 6).
-   - A set of at least three cards with the same number but different colors (e.g., blue 4, green 4, red 4). 
-     Note: Repeated colors are not allowed in this group type.
- 
+The first player to discard all their cards wins the game.
 

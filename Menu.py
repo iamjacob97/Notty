@@ -1,3 +1,4 @@
+
 import pygame
 import sys
 from os.path import join
@@ -8,9 +9,10 @@ from PickPlayer import PickPlayer
 class Menu(GameSetup):
     def __init__(self, screen, clock, manager):
         super().__init__(screen, clock, manager)
+        #Loading background image for menu
         self.background_image = pygame.image.load(join("images", "backgrounds", "startmenu.png"))
 
-        #Loadin audio files for the menu
+        #Loading audio files for the menu
         self.background_audio = pygame.mixer.Sound(join("audio", "background.wav"))
 
         # # Playing the background audio
@@ -27,13 +29,6 @@ class Menu(GameSetup):
             hovering_colour="Yellow", # colour of the button when hovered over
             ),
 
-            # Button(
-            # pos=(self.screen.get_width() // 2, 350),
-            # text_input="OPTIONS",
-            # font= font_style,
-            # base_colour="White",
-            # hovering_colour="Yellow"),
-
             Button("instructions",
             pos=(self.screen.get_width() // 2, 350),
             text_input="INSTUCTIONS",
@@ -49,41 +44,9 @@ class Menu(GameSetup):
             hovering_colour="Yellow")
         ]
 
-    # def show_options(self):
-    #     # Display the options screen
-    #     show_options_screen = True
-    #     while show_options_screen:
-    #         self.screen.fill("black")
-    #         font = pygame.font.Font(join("images", "menu", "font.ttf"), 25)
-    #         options_text = font.render("This is the OPTIONS screen.", True, "White")
-    #         self.screen.blit(options_text,(self.screen.get_width() // 2 - options_text.get_width() // 2, 300),)
 
-    #         back_button = Button(
-    #             pos=(self.screen.get_width() // 2, 500),
-    #             text_input="BACK",
-    #             font=pygame.font.Font(join("images", "menu", "font.ttf"), 75),
-    #             base_colour="White",
-    #             hovering_colour="Yellow",
-    #         )
-    #         back_button.changeColour(pygame.mouse.get_pos())
-    #         back_button.update(self.screen)
-
-    #         for event in pygame.event.get():
-    #             if event.type == pygame.QUIT:
-    #                 pygame.quit()
-    #                 sys.exit()
-    #             if event.type == pygame.MOUSEBUTTONDOWN:
-    #                 if back_button.IfButtonClicked(pygame.mouse.get_pos()):
-    #                     show_options_screen = False
-
-    #         pygame.display.flip() # Update the display
-
-
-
+    #Displays the instructions on the screen, ensuring text fits within the screen width.
     def show_instructions(self):
-        """
-        Displays the instructions on the screen, ensuring text fits within the screen width.
-        """
         # Read instructions from file
         instructions = self.load_instructions("instructions.txt")
 
@@ -99,10 +62,10 @@ class Menu(GameSetup):
             # # Render the instructions text on the screen, breaking lines that exceed the screen width.
             self.render_breaked_text(instructions, font, max_width=self.screen.get_width() - 40, start_y=100)
 
-                        # Create the back button
+            # Create the back button
             back_button = Button(
                 name="back",
-                pos=(self.screen.get_width() // 2, self.screen.get_height() - 100),
+                pos=(self.screen.get_width() // 2, self.screen.get_height() - 30),
                 text_input="BACK",
                 font=pygame.font.Font(join("images", "backgrounds", "font.ttf"), 21),
                 base_colour="White",
@@ -124,8 +87,11 @@ class Menu(GameSetup):
             pygame.display.flip() 
 
     def load_instructions(self, file_path):
+    # Opens the specific file in read mode
         with open(file_path, 'r') as file:
+    # Reads all the lines from the file and store them in the instructions variable
             instructions = file.readlines()
+    # Return the list of lines (instructions) from the file
         return instructions
 
 
@@ -180,13 +146,8 @@ class Menu(GameSetup):
                 # If the PLAY button is clicked
                 if self.objects[0].IfButtonClicked(event.pos): # PLAY Button which is at index 0
                     self.stop_background_music() # Stop the background music
-                    self.manager.change_state(PickPlayer(self.screen, self.clock, self.manager))
+                    self.manager.change_state(PickPlayer(self.screen, self.clock, self.manager)) #respoonsible for changing game states
                     self.running = False # Exit the menu loop
-
-                # If the OPTIONS button is clicked
-                # elif self.objects[1].IfButtonClicked(event.pos): # OPTIONS Button
-                #     #play audio
-                #     self.show_options()
 
                 # If the INSTRUCTIONS button is clicked
                 elif self.objects[1].IfButtonClicked(event.pos): # INSTRUCTIONS Button
